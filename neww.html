@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Media Unit - Premium Showcase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans Sinhala', sans-serif; }
+        .card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .card:hover { transform: translateY(-12px) scale(1.03); box-shadow: 0 30px 60px rgba(168, 85, 247, 0.4); }
+        .glass { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(16px); }
+        
+        /* Lightbox Styles */
+        .lightbox {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+        .lightbox.active { display: flex; align-items: center; justify-content: center; }
+        .lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 20px;
+            box-shadow: 0 25px 100px rgba(168, 85, 247, 0.6);
+        }
+        .lightbox-info {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .close-btn {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: linear-gradient(135deg, #f43f5e, #ec4899);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 3px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+        .close-btn:hover { transform: rotate(90deg) scale(1.1); }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white p-4 md:p-8">
+
+    <!-- Header -->
+    <div class="max-w-7xl mx-auto text-center mb-10">
+        <div class="glass rounded-3xl px-8 py-8 border border-white/20 inline-block">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-3 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Media Unit Showcase
+            </h1>
+            <p class="text-slate-300 text-xl">Premium Photography Gallery</p>
+            <p class="text-slate-400 text-sm mt-3">[උබේ School එකේ නම] | Camera Shoot Test 2026</p>
+            <div class="mt-4 flex justify-center gap-2 flex-wrap">
+                <span class="bg-green-500/20 text-green-300 px-4 py-1 rounded-full text-sm font-semibold">✨ 20 Students</span>
+                <span class="bg-blue-500/20 text-blue-300 px-4 py-1 rounded-full text-sm font-semibold">📸 HD Photos</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search + Filter -->
+    <div class="max-w-7xl mx-auto mb-8">
+        <div class="glass rounded-2xl p-5 border border-white/20">
+            <input type="text" id="searchInput" onkeyup="searchStudent()" placeholder="🔍 නමින් Search කරන්න..." 
+                   class="w-full bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-white placeholder-slate-400 mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            
+            <div class="flex flex-wrap gap-2 justify-center">
+                <button onclick="filterGrade('all')" class="filter-btn active bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-2 rounded-full font-bold border border-white/30 text-sm shadow-lg">
+                    සියල්ලම 20
+                </button>
+                <button onclick="filterGrade('6')" class="filter-btn bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full border border-white/20 text-sm font-semibold">
+                    6 ශ්‍රේණිය
+                </button>
+                <button onclick="filterGrade('7')" class="filter-btn bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full border border-white/20 text-sm font-semibold">
+                    7 ශ්‍රේණිය
+                </button>
+                <button onclick="filterGrade('8')" class="filter-btn bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full border border-white/20 text-sm font-semibold">
+                    8 ශ්‍රේණිය
+                </button>
+                <button onclick="filterGrade('9')" class="filter-btn bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full border border-white/20 text-sm font-semibold">
+                    9 ශ්‍රේණිය
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Grid - 20 Students -->
+    <div id="gallery" class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        
+        <!-- 1 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="7" data-name="කසුන් පෙරේරා" onclick="openLightbox('https://i.pravatar.cc/800?img=1', 'කසුන් පෙරේරා', '7 ශ්‍රේණිය', 'Portrait Mode Test')">
+            <img src="https://i.pravatar.cc/400?img=1" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-yellow-400 transition">1. කසුන් පෙරේරා</h3><span class="bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">7 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 2 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="8" data-name="දිල්කි සන්දීපනී" onclick="openLightbox('https://i.pravatar.cc/800?img=2', 'දිල්කි සන්දීපනී', '8 ශ්‍රේණිය', 'Outdoor Light Test')">
+            <img src="https://i.pravatar.cc/400?img=2" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-pink-400 transition">2. දිල්කි සන්දීපනී</h3><span class="bg-pink-400/20 text-pink-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">8 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 3 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="6" data-name="තිසර මධුෂාන්" onclick="openLightbox('https://i.pravatar.cc/800?img=3', 'තිසර මධුෂාන්', '6 ශ්‍රේණිය', 'Action Shot Test')">
+            <img src="https://i.pravatar.cc/400?img=3" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-blue-400 transition">3. තිසර මධුෂාන්</h3><span class="bg-blue-400/20 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">6 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 4 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="9" data-name="සහන් විමලසිරි" onclick="openLightbox('https://i.pravatar.cc/800?img=4', 'සහන් විමලසිරි', '9 ශ්‍රේණිය', 'Studio Light Test')">
+            <img src="https://i.pravatar.cc/400?img=4" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-purple-400 transition">4. සහන් විමලසිරි</h3><span class="bg-purple-400/20 text-purple-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">9 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 5 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="7" data-name="නෙත්මි දසුනි" onclick="openLightbox('https://i.pravatar.cc/800?img=5', 'නෙත්මි දසුනි', '7 ශ්‍රේණිය', 'Natural Light Test')">
+            <img src="https://i.pravatar.cc/400?img=5" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-yellow-400 transition">5. නෙත්මි දසුනි</h3><span class="bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">7 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 6 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="8" data-name="චාමික රත්නායක" onclick="openLightbox('https://i.pravatar.cc/800?img=6', 'චාමික රත්නායක', '8 ශ්‍රේණිය', 'Group Photo Test')">
+            <img src="https://i.pravatar.cc/400?img=6" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-pink-400 transition">6. චාමික රත්නායක</h3><span class="bg-pink-400/20 text-pink-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">8 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 7 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="6" data-name="රුක්ෂාන් ප්‍රනාන්දු" onclick="openLightbox('https://i.pravatar.cc/800?img=7', 'රුක්ෂාන් ප්‍රනාන්දු', '6 ශ්‍රේණිය', 'Candid Shot Test')">
+            <img src="https://i.pravatar.cc/400?img=7" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-blue-400 transition">7. රුක්ෂාන් ප්‍රනාන්දු</h3><span class="bg-blue-400/20 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">6 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 8 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="9" data-name="සඳුනි සේනාරත්න" onclick="openLightbox('https://i.pravatar.cc/800?img=8', 'සඳුනි සේනාරත්න', '9 ශ්‍රේණිය', 'Close-up Test')">
+            <img src="https://i.pravatar.cc/400?img=8" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-purple-400 transition">8. සඳුනි සේනාරත්න</h3><span class="bg-purple-400/20 text-purple-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">9 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 9 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="7" data-name="දිනෙත් අකලංක" onclick="openLightbox('https://i.pravatar.cc/800?img=9', 'දිනෙත් අකලංක', '7 ශ්‍රේණිය', 'Sports Mode Test')">
+            <img src="https://i.pravatar.cc/400?img=9" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-yellow-400 transition">9. දිනෙත් අකලංක</h3><span class="bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">7 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 10 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="8" data-name="ඉෂාරා හෙට්ටිආරච්චි" onclick="openLightbox('https://i.pravatar.cc/800?img=10', 'ඉෂාරා හෙට්ටිආරච්චි', '8 ශ්‍රේණිය', 'Profile Shot Test')">
+            <img src="https://i.pravatar.cc/400?img=10" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-pink-400 transition">10. ඉෂාරා හෙට්ටිආරච්චි</h3><span class="bg-pink-400/20 text-pink-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">8 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 11 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="6" data-name="පසිඳු ජයවර්ධන" onclick="openLightbox('https://i.pravatar.cc/800?img=11', 'පසිඳු ජයවර්ධන', '6 ශ්‍රේණිය', 'Smile Test')">
+            <img src="https://i.pravatar.cc/400?img=11" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-blue-400 transition">11. පසිඳු ජයවර්ධන</h3><span class="bg-blue-400/20 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">6 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 12 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="9" data-name="මාලිකා ද සිල්වා" onclick="openLightbox('https://i.pravatar.cc/800?img=12', 'මාලිකා ද සිල්වා', '9 ශ්‍රේණිය', 'Professional Test')">
+            <img src="https://i.pravatar.cc/400?img=12" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-purple-400 transition">12. මාලිකා ද සිල්වා</h3><span class="bg-purple-400/20 text-purple-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">9 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 13 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="7" data-name="අකිල බණ්ඩාර" onclick="openLightbox('https://i.pravatar.cc/800?img=13', 'අකිල බණ්ඩාර', '7 ශ්‍රේණිය', 'Low Light Test')">
+            <img src="https://i.pravatar.cc/400?img=13" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-yellow-400 transition">13. අකිල බණ්ඩාර</h3><span class="bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">7 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 14 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="8" data-name="සචිනි රණසිංහ" onclick="openLightbox('https://i.pravatar.cc/800?img=14', 'සචිනි රණසිංහ', '8 ශ්‍රේණිය', 'HDR Test')">
+            <img src="https://i.pravatar.cc/400?img=14" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-pink-400 transition">14. සචිනි රණසිංහ</h3><span class="bg-pink-400/20 text-pink-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">8 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 15 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="6" data-name="ගිහාන් සමරකෝන්" onclick="openLightbox('https://i.pravatar.cc/800?img=15', 'ගිහාන් සමරකෝන්', '6 ශ්‍රේණිය', 'Zoom Test')">
+            <img src="https://i.pravatar.cc/400?img=15" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-blue-400 transition">15. ගිහාන් සමරකෝන්</h3><span class="bg-blue-400/20 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">6 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 16 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="9" data-name="චතුරි අමරසිංහ" onclick="openLightbox('https://i.pravatar.cc/800?img=16', 'චතුරි අමරසිංහ', '9 ශ්‍රේණිය', 'Bokeh Effect Test')">
+            <img src="https://i.pravatar.cc/400?img=16" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-purple-400 transition">16. චතුරි අමරසිංහ</h3><span class="bg-purple-400/20 text-purple-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">9 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 17 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="7" data-name="දුලාන් විජේසිංහ" onclick="openLightbox('https://i.pravatar.cc/800?img=17', 'දුලාන් විජේසිංහ', '7 ශ්‍රේණිය', 'Flash Test')">
+            <img src="https://i.pravatar.cc/400?img=17" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-yellow-400 transition">17. දුලාන් විජේසිංහ</h3><span class="bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">7 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 18 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="8" data-name="හිරුණි කපුගේ" onclick="openLightbox('https://i.pravatar.cc/800?img=18', 'හිරුණි කපුගේ', '8 ශ්‍රේණිය', 'Wide Angle Test')">
+            <img src="https://i.pravatar.cc/400?img=18" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-pink-400 transition">18. හිරුණි කපුගේ</h3><span class="bg-pink-400/20 text-pink-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">8 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 19 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="6" data-name="සනුක ලක්මාල්" onclick="openLightbox('https://i.pravatar.cc/800?img=19', 'සනුක ලක්මාල්', '6 ශ්‍රේණිය', 'Macro Test')">
+            <img src="https://i.pravatar.cc/400?img=19" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-blue-400 transition">19. සනුක ලක්මාල්</h3><span class="bg-blue-400/20 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">6 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+        <!-- 20 --> <div class="card glass rounded-2xl overflow-hidden border border-white/20" data-grade="9" data-name="මනීෂා වීරසිංහ" onclick="openLightbox('https://i.pravatar.cc/800?img=20', 'මනීෂා වීරසිංහ', '9 ශ්‍රේණිය', 'Night Mode Test')">
+            <img src="https://i.pravatar.cc/400?img=20" class="w-full h-64 object-cover" alt="Student">
+            <div class="p-5"><h3 class="text-xl font-bold hover:text-purple-400 transition">20. මනීෂා වීරසිංහ</h3><span class="bg-purple-400/20 text-purple-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 inline-block">9 ශ්‍රේණිය</span><p class="text-slate-400 text-xs mt-2">👆 Click to View</p></div>
+        </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeLightbox()">✕</button>
+            <img id="lightbox-img" class="lightbox-img" src="" alt="Student Photo">
+            <div class="lightbox-info">
+                <h2 id="lightbox-name" class="text-3xl font-bold mb-2"></h2>
+                <p id="lightbox-grade" class="text-xl text-yellow-400 font-semibold mb-2"></p>
+                <p id="lightbox-desc" class="text-slate-300"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="max-w-7xl mx-auto text-center mt-16 text-slate-400 text-sm">
+        <p>© 2026 School Media Unit | Camera Shoot Test Project</p>
+        <p class="mt-1">Developed by [උබේ නම] | Grade [උබේ ශ්‍රේණිය]</p>
+    </div>
+
+    <script>
+        function filterGrade(grade) {
+            const cards = document.querySelectorAll('.card');
+            const buttons = document.querySelectorAll('.filter-btn');
+            
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-gradient-to-r', 'from-purple-500', 'to-pink-500', 'active');
+                btn.classList.add('bg-white/10');
+            });
+            event.target.classList.remove('bg-white/10');
+            event.target.classList.add('bg-gradient-to-r', 'from-purple-500', 'to-pink-500', 'active');
+
+            cards.forEach(card => {
+                if (grade === 'all' || card.dataset.grade === grade) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function searchStudent() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                if (name.includes(input)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function openLightbox(imgSrc, name, grade, desc) {
+            document.getElementById('lightbox').classList.add('active');
+            document.getElementById('lightbox-img').src = imgSrc;
+            document.getElementById('lightbox-name').textContent = name;
+            document.getElementById('lightbox-grade').textContent = grade;
+            document.getElementById('lightbox-desc').textContent = desc;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+
+</body>
+</html>
