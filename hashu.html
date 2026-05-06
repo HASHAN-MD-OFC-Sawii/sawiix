@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CF HTML Deployer Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+   .font-mono { font-family: 'JetBrains Mono', monospace!important; }
+    body {
+        background: #020617;
+        background-image:
+            radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(254, 202, 87, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(255, 107, 107, 0.1) 0%, transparent 50%);
+    }
+   .glass {
+        background: rgba(15, 23, 42, 0.96);
+        backdrop-filter: blur(32px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+   .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #feca57 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+   .btn-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+   .btn-gradient:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
+    }
+   .btn-gradient:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+   .card-3d {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+   .card-3d:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    }
+    #editor { height: 500px; border-radius: 12px; overflow: hidden; }
+    #terminal { height: 400px; padding: 16px; border-radius: 12px; background: #000; }
+</style>
+</head>
+<body class="text-slate-200 min-h-screen">
+<div class="container mx-auto p-4 max-w-7xl">
+    <!-- Header -->
+    <div class="glass rounded-3xl p-6 mb-6 card-3d">
+        <h1 class="text-4xl font-extrabold gradient-text mb-2">CF HTML Deployer Pro</h1>
+        <p class="text-slate-400">Cloudflare Pages Direct Deploy - Token Based - Unlimited Free</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="glass rounded-2xl p-2 mb-6 flex gap-2">
+        <button onclick="showTab('settings')" id="tab-settings" class="tab-btn flex-1 py-3 rounded-xl font-bold bg-slate-800">⚙️ Settings</button>
+        <button onclick="showTab('editor')" id="tab-editor" class="tab-btn flex-1 py-3 rounded-xl font-bold">📝 Code Editor</button>
+        <button onclick="showTab('deploy')" id="tab-deploy" class="tab-btn flex-1 py-3 rounded-xl font-bold">🚀 Deploy</button>
+        <button onclick="showTab('logs')" id="tab-logs" class="tab-btn flex-1 py-3 rounded-xl font-bold">📊 Logs</button>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settings-tab" class="tab-content">
+        <div class="glass rounded-3xl p-8 card-3d">
+            <h2 class="text-2xl font-bold mb-6 gradient-text">Cloudflare Configuration</h2>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Cloudflare API Token</label>
+                    <div class="relative">
+                        <input type="password" id="cf-token" placeholder="CF_xxxxxxxxxxxxxxxxxxxxxxxx" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 font-mono text-sm focus:border-indigo-500 focus:outline-none">
+                        <button onclick="toggleToken()" class="absolute right-3 top-3 text-slate-400">👁️</button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Permission: Account → Cloudflare Pages → Edit</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Account ID</label>
+                    <input type="text" id="cf-account" placeholder="32 character ID from dashboard URL" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 font-mono text-sm focus:border-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Project Name</label>
+                    <input type="text" id="cf-project" placeholder="my-html-site" value="my-html-site" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 font-mono text-sm focus:border-indigo-500 focus:outline-none">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="testConnection()" class="flex-1 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-bold">Test Connection</button>
+                    <button onclick="saveSettings()" class="flex-1 btn-gradient py-3 rounded-xl font-bold text-white">Save Settings</button>
+                </div>
+                <div id="connection-status" class="hidden p-4 rounded-xl"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editor Tab -->
+    <div id="editor-tab" class="tab-content hidden">
+        <div class="glass rounded-3xl p-6 card-3d mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold gradient-text">Code Editor</h2>
+                <select id="template-select" onchange="loadTemplate()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm">
+                    <option value="blank">Blank</option>
+                    <option value="landing">Landing Page</option>
+                    <option value="portfolio">Portfolio</option>
+                </select>
+            </div>
+            <div class="flex gap-2 mb-4">
+                <button onclick="switchFile('index.html')" class="file-tab px-4 py-2 rounded-lg bg-indigo-600 text-sm font-bold">index.html</button>
+                <button onclick="switchFile('style.css')" class="file-tab px-4 py-2 rounded-lg bg-slate-800 text-sm font-bold">style.css</button>
+                <button onclick="switchFile('script.js')" class="file-tab px-4 py-2 rounded-lg bg-slate-800 text-sm font-bold">script.js</button>
+            </div>
+            <div id="editor"></div>
+        </div>
+        <div class="glass rounded-3xl p-6 card-3d">
+            <h3 class="text-xl font-bold mb-4">Live Preview</h3>
+            <iframe id="preview" class="w-full h-96 bg-white rounded-xl"></iframe>
+        </div>
+    </div>
+
+    <!-- Deploy Tab -->
+    <div id="deploy-tab" class="tab-content hidden">
+        <div class="glass rounded-3xl p-8 card-3d">
+            <h2 class="text-2xl font-bold mb-6 gradient-text">Deploy to Cloudflare Pages</h2>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-bold mb-2">App Name (Exactly 4 Words Required)</label>
+                    <input type="text" id="app-name" placeholder="my cool web app" oninput="validateAppName()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-lg focus:outline-none">
+                    <div class="flex justify-between mt-2">
+                        <p id="app-name-status" class="text-sm text-slate-500">Words: 0/4</p>
+                        <p id="app-name-url" class="text-sm text-indigo-400 font-mono"></p>
+                    </div>
+                </div>
+                <button onclick="deployToCloudflare()" id="deploy-btn" disabled class="w-full btn-gradient py-4 rounded-xl font-bold text-white text-lg">
+                    🚀 Deploy to Cloudflare Pages
+                </button>
+                <div id="deploy-result" class="hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="logs-tab" class="tab-content hidden">
+        <div class="glass rounded-3xl p-6 card-3d">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold gradient-text">Build Logs</h2>
+                <div class="flex gap-2">
+                    <button onclick="copyLogs()" class="bg-slate-800 px-4 py-2 rounded-lg text-sm">Copy</button>
+                    <button onclick="clearLogs()" class="bg-slate-800 px-4 py-2 rounded-lg text-sm">Clear</button>
+                </div>
+            </div>
+            <div id="terminal"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let editor, term, fitAddon;
+let currentFile = 'index.html';
+let files = {
+    'index.html': '<!DOCTYPE html>\n<html>\n<head>\n <title>My App</title>\n <link rel="stylesheet" href="style.css">\n</head>\n<body>\n <h1>Hello Cloudflare!</h1>\n <script src="script.js"></script>\n</body>\n</html>',
+    'style.css': 'body {\n font-family: Arial;\n background: linear-gradient(135deg, #667eea, #764ba2);\n color: white;\n padding: 50px;\n}',
+    'script.js': 'console.log("Deployed to Cloudflare Pages!");'
+};
+let config = {};
+
+const templates = {
+    blank: { html: files['index.html'], css: files['style.css'], js: files['script.js'] },
+    landing: {
+        html: '<!DOCTYPE html>\n<html>\n<head>\n <title>Landing</title>\n <link rel="stylesheet" href="style.css">\n</head>\n<body>\n <div class="hero">\n <h1>Welcome</h1>\n <p>Deployed on Cloudflare</p>\n <button>Get Started</button>\n </div>\n <script src="script.js"></script>\n</body>\n</html>',
+        css: '.hero{text-align:center;padding:100px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;min-height:100vh}h1{font-size:4rem;margin-bottom:20px}button{padding:15px 40px;font-size:18px;border:none;border-radius:50px;cursor:pointer}',
+        js: 'document.querySelector("button").onclick=()=>alert("Hello!")'
+    },
+    portfolio: {
+        html: '<!DOCTYPE html>\n<html>\n<head><title>Portfolio</title><link rel="stylesheet" href="style.css"></head>\n<body><nav><h2>My Portfolio</h2></nav><section class="hero"><h1>John Doe</h1><p>Web Developer</p></section></body></html>',
+        css: 'body{margin:0;font-family:Arial}nav{background:#1a1a1a;color:white;padding:20px}.hero{padding:100px;text-align:center;background:#667eea;color:white}',
+        js: 'console.log("Portfolio loaded")'
+    }
+};
+
+require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+require(['vs/editor/editor.main'], function() {
+    editor = monaco.editor.create(document.getElementById('editor'), {
+        value: files[currentFile],
+        language: 'html',
+        theme: 'vs-dark',
+        fontSize: 14,
+        fontFamily: 'JetBrains Mono',
+        minimap: { enabled: false },
+        automaticLayout: true
+    });
+    editor.onDidChangeModelContent(() => {
+        files[currentFile] = editor.getValue();
+        updatePreview();
+    });
+    loadConfig();
+    updatePreview();
+});
+
+term = new Terminal({
+    theme: { background: '#000000', foreground: '#e2e8f0', cursor: '#667eea' },
+    fontFamily: 'JetBrains Mono',
+    fontSize: 13,
+    cursorBlink: true
+});
+fitAddon = new FitAddon.FitAddon();
+term.loadAddon(fitAddon);
+term.open(document.getElementById('terminal'));
+fitAddon.fit();
+term.writeln('CF HTML Deployer Pro - Ready');
+
+function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-slate-800'));
+    document.getElementById(tab + '-tab').classList.remove('hidden');
+    document.getElementById('tab-' + tab).classList.add('bg-slate-800');
+    if (tab === 'logs') setTimeout(() => fitAddon.fit(), 100);
+}
+
+function switchFile(file) {
+    currentFile = file;
+    editor.setValue(files[file]);
+    const lang = file.endsWith('.html')? 'html' : file.endsWith('.css')? 'css' : 'javascript';
+    monaco.editor.setModelLanguage(editor.getModel(), lang);
+    document.querySelectorAll('.file-tab').forEach((btn, i) => {
+        btn.classList.toggle('bg-indigo-600', ['index.html', 'style.css', 'script.js'][i] === file);
+        btn.classList.toggle('bg-slate-800', ['index.html', 'style.css', 'script.js'][i]!== file);
+    });
+}
+
+function loadTemplate() {
+    const t = document.getElementById('template-select').value;
+    files['index.html'] = templates[t].html;
+    files['style.css'] = templates[t].css;
+    files['script.js'] = templates[t].js;
+    switchFile('index.html');
+    updatePreview();
+}
+
+function updatePreview() {
+    const html = files['index.html'].replace('<link rel="stylesheet" href="style.css">', `<style>${files['style.css']}</style>`).replace('<script src="script.js"></script>', `<script>${files['script.js']}</script>`);
+    document.getElementById('preview').srcdoc = html;
+}
+
+function toggleToken() {
+    const input = document.getElementById('cf-token');
+    input.type = input.type === 'password'? 'text' : 'password';
+}
+
+function encrypt(text) {
+    return CryptoJS.AES.encrypt(text, 'wacloud-cf-key').toString();
+}
+
+function decrypt(text) {
+    return CryptoJS.AES.decrypt(text, 'wacloud-cf-key').toString(CryptoJS.enc.Utf8);
+}
+
+function saveSettings() {
+    const token = document.getElementById('cf-token').value;
+    const accountId = document.getElementById('cf-account').value;
+    const projectName = document.getElementById('cf-project').value;
+    if (!token ||!accountId ||!projectName) {
+        Swal.fire('Error', 'Fill all fields', 'error');
+        return;
+    }
+    config = { token: encrypt(token), accountId, projectName };
+    localStorage.setItem('cf_deploy_config', JSON.stringify(config));
+    Swal.fire('Success', 'Settings saved', 'success');
+}
+
+function loadConfig() {
+    const saved = localStorage.getItem('cf_deploy_config');
+    if (saved) {
+        config = JSON.parse(saved);
+        document.getElementById('cf-token').value = decrypt(config.token);
+        document.getElementById('cf-account').value = config.accountId;
+        document.getElementById('cf-project').value = config.projectName;
+    }
+}
+
+async function testConnection() {
+    const token = document.getElementById('cf-token').value;
+    const accountId = document.getElementById('cf-account').value;
+    if (!token ||!accountId) {
+        Swal.fire('Error', 'Enter token and account ID', 'error');
+        return;
+    }
+    try {
+        const res = await axios.get(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        document.getElementById('connection-status').className = 'p-4 rounded-xl bg-green-900/30 border border-green-500/50';
+        document.getElementById('connection-status').innerHTML = '✓ Connected successfully';
+        document.getElementById('connection-status').classList.remove('hidden');
+        Swal.fire('Success', 'Connection successful', 'success');
+    } catch (e) {
+        document.getElementById('connection-status').className = 'p-4 rounded-xl bg-red-900/30 border border-red-500/50';
+        document.getElementById('connection-status').innerHTML = '✗ Connection failed: ' + (e.response?.data?.errors?.[0]?.message || e.message);
+        document.getElementById('connection-status').classList.remove('hidden');
+        Swal.fire('Error', 'Invalid token or account ID', 'error');
+    }
+}
+
+function validateAppName() {
+    const input = document.getElementById('app-name');
+    const value = input.value.trim();
+    const words = value.split(/\s+/).filter(w => w);
+    const regex = /^[a-zA-Z0-9]+ [a-zA-Z0-9]+ [a-zA-Z0-9]+ [a-zA-Z0-9]+$/;
+    const isValid = regex.test(value);
+
+    document.getElementById('app-name-status').textContent = `Words: ${words.length}/4`;
+
+    if (isValid) {
+        input.classList.remove('border-red-500');
+        input.classList.add('border-green-500');
+        document.getElementById('app-name-status').className = 'text-sm text-green-400';
+        document.getElementById('app-name-status').textContent = `✓ Valid - ${words.length}/4`;
+        document.getElementById('app-name-url').textContent = `→ ${config.projectName || 'project'}.pages.dev`;
+        document.getElementById('deploy-btn').disabled = false;
+    } else {
+        input.classList.remove('border-green-500');
+        input.classList.add('border-red-500');
+        document.getElementById('app-name-status').className = 'text-sm text-red-400';
+        document.getElementById('app-name-status').textContent = `✗ Must be exactly 4 words - ${words.length}/4`;
+        document.getElementById('app-name-url').textContent = '';
+        document.getElementById('deploy-btn').disabled = true;
+    }
+}
+
+function log(msg, type = 'info') {
+    const colors = { info: '\x1b[36m', success: '\x1b[32m', error: '\x1b[31m', warn: '\x1b[33m' };
+    term.writeln(`${colors[type]}[${new Date().toLocaleTimeString()}] ${msg}\x1b[0m`);
+}
+
+async function deployToCloudflare() {
+    if (!config.token) {
+        Swal.fire('Error', 'Configure settings first', 'error');
+        showTab('settings');
+        return;
+    }
+
+    const appName = document.getElementById('app-name').value.trim();
+    if (!/^[a-zA-Z0-9]+ [a-zA-Z0-9]+ [a-zA-Z0-9]+ [a-zA-Z0-9]+$/.test(appName)) {
+        Swal.fire('Error', 'App name must be exactly 4 words', 'error');
+        return;
+    }
+
+    const token = decrypt(config.token);
+    const { accountId, projectName } = config;
+
+    showTab('logs');
+    log('Starting deployment...', 'info');
+    log(`Project: ${projectName}`, 'info');
+    log(`App: ${appName}`, 'info');
+
+    try {
+        const filesArray = [
+            { name: 'index.html', content: btoa(unescape(encodeURIComponent(files['index.html']))) },
+            { name: 'style.css', content: btoa(unescape(encodeURIComponent(files['style.css']))) },
+            { name: 'script.js', content: btoa(unescape(encodeURIComponent(files['script.js']))) }
+        ];
+
+        log('Checking if project exists...', 'info');
+        try {
+            await axios.get(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            log('Project exists', 'success');
+        } catch (e) {
+            if (e.response?.status === 404) {
+                log('Creating new project...', 'warn');
+                await axios.post(`https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects`, {
+                    name: projectName,
+                    production_branch: 'main'
+                }, { headers: { 'Authorization': `Bearer ${token}` } });
+                log('Project created', 'success');
+            } else throw e;
+        }
+
+        log('Uploading files...', 'info');
+        const deployRes = await axios.post(
+            `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}/deployments`,
+            {
+                deployment_trigger: { metadata: { branch: 'main', app_name: appName } },
+                files: filesArray
+            },
+            { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        );
+
+        const deploymentId = deployRes.data.result.id;
+        const url = `https://${projectName}.pages.dev`;
+        log(`Deployment ID: ${deploymentId}`, 'success');
+        log('Building...', 'info');
+
+        let attempts = 0;
+        const pollLogs = setInterval(async () => {
+            try {
+                const logsRes = await axios.get(
+                    `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}/deployments/${deploymentId}/logs`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
+                if (logsRes.data.result?.logs) {
+                    logsRes.data.result.logs.forEach(l => log(l.line, 'info'));
+                }
+                const depRes = await axios.get(
+                    `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}/deployments/${deploymentId}`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
+                if (depRes.data.result.latest_stage?.name === 'deploy' && depRes.data.result.latest_stage?.status === 'success') {
+                    clearInterval(pollLogs);
+                    log('Deployment successful!', 'success');
+                    log(`Live URL: ${url}`, 'success');
+                    document.getElementById('deploy-result').className = 'p-6 rounded-xl bg-green-900/30 border border-green-500/50';
+                    document.getElementById('deploy-result').innerHTML = `
+                        <p class="font-bold text-green-400 mb-2">✓ Deployment Successful</p>
+                        <a href="${url}" target="_blank" class="text-indigo-400 hover:text-indigo-300 font-mono">${url}</a>
+                        <button onclick="navigator.clipboard.writeText('${url}')" class="ml-4 bg-slate-800 px-3 py-1 rounded text-xs">Copy</button>
+                    `;
+                    document.getElementById('deploy-result').classList.remove('hidden');
+                    Swal.fire('Success', 'Deployed successfully!', 'success');
+                }
+                if (++attempts > 60) {
+                    clearInterval(pollLogs);
+                    log('Deployment timeout', 'error');
+                }
+            } catch (e) {
+                clearInterval(pollLogs);
+                log('Error: ' + e.message, 'error');
+            }
+        }, 2000);
+
+    } catch (e) {
+        log('Deployment failed: ' + (e.response?.data?.errors?.[0]?.message || e.message), 'error');
+        Swal.fire('Error', e.response?.data?.errors?.[0]?.message || 'Deployment failed', 'error');
+    }
+}
+
+function copyLogs() {
+    const content = term.buffer.active.getLines(0, term.buffer.active.length).map(l => l.translateToString()).join('\n');
+    navigator.clipboard.writeText(content);
+    Swal.fire('Copied', 'Logs copied to clipboard', 'success');
+}
+
+function clearLogs() {
+    term.clear();
+    log('Terminal cleared', 'info');
+}
+
+window.addEventListener('resize', () => fitAddon?.fit());
+</script>
+</body>
+</html>
